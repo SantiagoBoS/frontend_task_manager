@@ -39,6 +39,7 @@ class _TaskListScreenState extends State<TaskListScreen>{
         future: futureTasks,
         builder: (context, snapshot){
           try{
+            //Manejo de error y conexion con el back
             if(snapshot.connectionState == ConnectionState.waiting){
               //Cargando las tareas
               return const Center(child: CircularProgressIndicator());
@@ -138,6 +139,7 @@ class _TaskListScreenState extends State<TaskListScreen>{
     }
   }
 
+  //Modal para la creacion y actualizacion de una tarea
   Future<bool> showTaskFormDialog(BuildContext context, {
     Task? existing,
     required TaskService taskService,
@@ -178,6 +180,12 @@ class _TaskListScreenState extends State<TaskListScreen>{
                         controller: descriptionController,
                         decoration: const InputDecoration(labelText: 'Descripcion'),
                         maxLines: 2,
+                        validator: (value){
+                          if(value == null || value.trim().isEmpty){
+                            return 'La descripcion es obligatorio';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
