@@ -13,7 +13,7 @@ class TaskService{
 
   //Obtener las tareas
   Future<List<Task>> getTasks() async{
-    var response = await http.get(Uri.parse('$baseUrl/tasks'));
+    final response = await http.get(Uri.parse('$baseUrl/tasks'));
     if(response.statusCode == 200){
       List<dynamic> bodyResponse = jsonDecode(response.body);
       return bodyResponse.map((jsonResponse) => Task.fromJson(jsonResponse)).toList();

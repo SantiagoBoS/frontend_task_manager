@@ -17,7 +17,7 @@ class _TaskListScreenState extends State<TaskListScreen>{
   void initState(){
     super.initState();
     //Ejecucion del API para traer las tareas
-    loadTask();
+    futureTasks = taskService.getTasks();
   }
 
   //Para recargar las tareas
@@ -32,7 +32,8 @@ class _TaskListScreenState extends State<TaskListScreen>{
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gestor de Tareas'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.black87,
+        foregroundColor: Colors.white,
       ),
       body: FutureBuilder<List<Task>>(
         future: futureTasks,
@@ -41,17 +42,18 @@ class _TaskListScreenState extends State<TaskListScreen>{
             if(snapshot.connectionState == ConnectionState.waiting){
               //Cargando las tareas
               return const Center(child: CircularProgressIndicator());
-            }else if(!snapshot.hasData || snapshot.data!.isEmpty){
-              //Si no encuentra tareas
-              return const Center(child: Text('No hay tareas disponibles'));
             }else if (snapshot.hasError){
               //Si ocurre algun error
               return Center(child: Text('Error: ${snapshot.error}'));
+            }else if(!snapshot.hasData || snapshot.data!.isEmpty){
+              //Si no encuentra tareas
+              return const Center(child: Text('No hay tareas disponibles'));
             }
           }catch (e) {
             throw Exception('Error al mostrar las tareas. Código: ${e.hashCode}');
           }
 
+          //Logica para los botones en cada tarea
           return ListView.separated(
             itemCount: snapshot.data!.length,
             separatorBuilder: (context, index) => const SizedBox(height: 8),
@@ -59,26 +61,30 @@ class _TaskListScreenState extends State<TaskListScreen>{
               Task task = snapshot.data![index];
               return ListTile(
                 tileColor: getStatusColor(task.status),
-                title: Text(task.title),
-                subtitle: Text('Estado: ${getStatusLabel(task.status)}'),
+                title: Text(task.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                ),
+                subtitle: Text('Estado: ${getStatusLabel(task.status)}',
+                  style: const TextStyle(fontSize: 14)
+                ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     //Boton Editar
                     IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.black),
-                        onPressed: (){
-                          _editTask(task);
-                        },
+                      icon: const Icon(Icons.edit, color: Colors.black),
+                      onPressed: (){
+                        _editTask(task);
+                      },
                     ),
                     //Boton Eliminar
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.black),
                       onPressed: () async {
-                        bool confirmar = await showDialogDeleteTask(context);
-                        if (confirmar) {
+                        bool confirm = await showDialogDeleteTask(context);
+                        if (confirm) {
                           await taskService.deleteTask(task.id);
-                          //Para mostar un toltip MELO
+                          //Si se completa, mostrar un mensaje en la parte inferior de la pantalla
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Tarea eliminada con éxito")),
                           );
@@ -93,10 +99,13 @@ class _TaskListScreenState extends State<TaskListScreen>{
           );
         },
       ),
+      //Boton flotante para crear una tarea
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createTask,
-        backgroundColor: Colors.white30,
-        label: const Text('Crear una nueva tarea'),
+        backgroundColor: Colors.white54,
+        label: const Text('Crear una nueva tarea',
+          style: TextStyle(fontSize: 15),
+        ),
       ),
     );
   }
@@ -105,6 +114,7 @@ class _TaskListScreenState extends State<TaskListScreen>{
   Future<void> _createTask() async {
     var createTask = await showTaskFormDialog(context, taskService: taskService);
     if (createTask){
+      //Si se completa, mostrar un mensaje en la parte inferior de la pantalla
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Tarea creada con éxito")),
       );
@@ -120,6 +130,7 @@ class _TaskListScreenState extends State<TaskListScreen>{
       taskService: taskService
     );
     if (editTask){
+      //Si se completa, mostrar un mensaje en la parte inferior de la pantalla
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Tarea editada con éxito")),
       );
@@ -220,11 +231,17 @@ class _TaskListScreenState extends State<TaskListScreen>{
                       Navigator.of(context).pop(true);
                     }catch(e){
                       setStateDialog(() => isSaving = false);
+                      //Si se completa, mostrar un mensaje en la parte inferior de la pantalla
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error al guardar: $e'))
                       );
                     }
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   child: Text(existing == null ? 'Crear' : 'Guardar')
                 )
               ],
