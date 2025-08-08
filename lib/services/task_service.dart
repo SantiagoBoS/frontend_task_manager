@@ -24,10 +24,15 @@ class TaskService{
 
   //Crear una nueva tarea
   Future<Task> createTask( Task task ) async{
+    var createTask = {
+      'title': task.title,
+      'description': task.description,
+      'status': task.status
+    };
     var response = await http.post(
       Uri.parse('$baseUrl/tasks'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(task.toJson())
+      body: jsonEncode(createTask)
     );
     if(response.statusCode == 201){
       return Task.fromJson(jsonDecode(response.body));
@@ -38,10 +43,15 @@ class TaskService{
 
   //Actualizar una tarea
   Future<Task> updateTask(int id, Task task ) async{
+    var editTask = {
+      'title': task.title,
+      'description': task.description,
+      'status': task.status
+    };
     var response = await http.put(
         Uri.parse('$baseUrl/tasks/$id'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(task.toJson())
+        body: jsonEncode(editTask)
     );
     if(response.statusCode == 200){
       return Task.fromJson(jsonDecode(response.body));
