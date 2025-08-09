@@ -1,4 +1,5 @@
 import 'dart:convert'; //JSON en objetos dart
+import 'device_service.dart';
 import 'package:http/http.dart' as http;
 import '../models/task.dart';
 
@@ -12,7 +13,10 @@ class TaskService{
 
   //Obtener las tareas
   Future<List<Task>> getTasks() async{
-    final response = await http.get(Uri.parse('$baseUrl/tasks'));
+    String deviceId = await DeviceService.getDeviceId();
+    final response = await http.get(Uri.parse('$baseUrl/tasks/?deviceId=$deviceId'));
+    //final response = await http.get(Uri.parse('$baseUrl/tasks'));
+
     if(response.statusCode == 200){
       List<dynamic> bodyResponse = jsonDecode(response.body);
       return bodyResponse.map((jsonResponse) => Task.fromJson(jsonResponse)).toList();
@@ -23,10 +27,12 @@ class TaskService{
 
   //Crear una nueva tarea
   Future<Task> createTask( Task task ) async{
+    String deviceId = await DeviceService.getDeviceId();
     var createTask = {
       'title': task.title,
       'description': task.description,
-      'status': task.status
+      'status': task.status,
+      'deviceId': deviceId
     };
     var response = await http.post(
       Uri.parse('$baseUrl/tasks'),
@@ -42,10 +48,12 @@ class TaskService{
 
   //Actualizar una tarea
   Future<Task> updateTask(int id, Task task ) async{
+    String deviceId = await DeviceService.getDeviceId();
     var editTask = {
       'title': task.title,
       'description': task.description,
-      'status': task.status
+      'status': task.status,
+      'deviceId': deviceId
     };
     var response = await http.put(
         Uri.parse('$baseUrl/tasks/$id'),
@@ -61,7 +69,8 @@ class TaskService{
 
   //Eliminar una tarea
   Future<String> deleteTask(int id) async{
-    var response = await http.delete(Uri.parse('$baseUrl/tasks/$id'));
+    String deviceId = await DeviceService.getDeviceId();
+    var response = await http.delete(Uri.parse('$baseUrl/tasks/$id?deviceId=$deviceId'));
     if(response.statusCode != 200 && response.statusCode != 204){
       throw Exception('Respuesta no satisfactoria al momento de eliminar una tarea. Código: ${response.statusCode}');
     }else{
